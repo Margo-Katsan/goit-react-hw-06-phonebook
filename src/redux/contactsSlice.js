@@ -1,4 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { persistReducer } from 'redux-persist'
+import storage from 'redux-persist/lib/storage' 
 
 const initialContacts = [
   { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
@@ -6,31 +8,30 @@ const initialContacts = [
   { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
   { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
 ];
-const getInitialContacts = () => {
-  const savedContacts = localStorage.getItem('Contacts');
-    if (savedContacts !== null) {
-       return JSON.parse(savedContacts)
-  }
-  return initialContacts;
-}
 
 const contactsSlice = createSlice({
   name: "contacts",
-  initialState: getInitialContacts(),
+  initialState: { items: initialContacts },
   reducers: {
     addContact(state, action) {
-      const isContactExist = state.filter(contact => contact.name === action.payload.name).length !== 0;
+      const isContactExist = state.items.filter(contact => contact.name === action.payload.name).length !== 0;
       if (isContactExist) {
         alert(`${action.payload.name} is already in contacts.`);
-      return;
-    }
-      state.push(action.payload);
+        return;
+      }
+      state.items.push(action.payload);
     },
     deleteContact(state, action) {
-      return state.filter(contact => action.payload !== contact.id)
+      state.items = state.items.filter(contact => action.payload !== contact.id)
     }
   }
-})
+});
 
+const persistConfig = {
+  key: 'contacts',
+  storage,
+}
+ 
+export const contactsReducer = persistReducer(persistConfig, contactsSlice.reducer);
 export const {addContact, deleteContact} = contactsSlice.actions;
-export const contactsReducer = contactsSlice.reducer;
+export const getContacts = state => state.contacts.items;
